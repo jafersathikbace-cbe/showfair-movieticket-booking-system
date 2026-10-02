@@ -1,197 +1,171 @@
-# ShowFair — Tamil Cinema
+# ShowFair — Tamil Cinema 🎬
 
-A focused Tamil movie showtime and seat-booking demo for Coimbatore.
+> A focused Tamil movie showtime and seat-booking demo for Coimbatore, featuring server-side seat holds, pricing, booking, cancellation, and India-time scheduling.
 
-ShowFair lets a visitor:
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-ShowFair-111111?style=flat-square)](https://showfair-movieticket-booking-system.onrender.com/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=flat-square&logo=github)](https://github.com/jafersathikbace-cbe/showfair-movieticket-booking-system)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
-- browse **Tamil movies only**
-- switch between **today and the next four days**
-- see Coimbatore theatres and showtimes
-- inspect a live 8×10 seat map
-- hold seats on the server for 7 minutes
-- see the complete ticket + convenience fee + GST breakdown before confirmation
-- receive a booking code
-- look up bookings by email
-- cancel an eligible booking and see the refund amount
+**Live Demo:** https://showfair-movieticket-booking-system.onrender.com/
+
+---
+
+## Application Preview
+
+### ShowFair booking interface
+
+![ShowFair Tamil cinema booking interface](showfair-dashboard.png)
+
+*Tamil movie discovery and Coimbatore showtime selection.*
+
+### Live seat selection
+
+![ShowFair seat selection](showfair-seat-selection.png)
+
+*Server-backed seat selection with premium-seat indicators, occupied seats, and temporary seat holds.*
+
+---
+
+## Overview
+
+ShowFair is a focused movie showtime and ticket-booking demonstration built around a **Tamil-cinema experience for Coimbatore**.
+
+The application allows visitors to:
+
+- Browse Tamil movies only
+- Switch between today and the next four days
+- View Coimbatore theatres and showtimes
+- Inspect a live 8×10 seat map
+- Hold seats on the server for 7 minutes
+- View ticket, convenience-fee, and GST calculations before confirmation
+- Receive a booking code
+- Look up bookings using an email address
+- Cancel eligible bookings and view the refund amount
 
 The movies, theatres, schedules, and poster artwork are **fictional demo content**.
 
-## What was fixed in the Tamil-cinema refresh
+---
 
-The original demo had several content and lifecycle problems:
+## Key Features
 
-1. **Stale show dates** — the original data was fixed to September 25, 2026, so it became outdated. Shows now use relative demo dates.
-2. **Mixed-language catalog** — English and Hindi filters/content were removed. The catalog is now Tamil-only.
-3. **External poster dependency** — remote placeholder posters were replaced with local SVG artwork.
-4. **Client-side checkout calculation** — the server now calculates the price breakdown when the seat hold is created; checkout displays that server result.
-5. **Past-show booking** — the API now rejects shows that have already started.
-6. **Timezone ambiguity** — show dates and cancellation cutoffs use India Standard Time (Asia/Kolkata).
-7. **Stale browser assets after deployment** — local HTML/CSS/JS assets are served with `no-cache`.
-8. **Deployment security** — baseline CSP and Permissions-Policy headers were added.
+### 🎬 Tamil Movie Discovery
 
-## Run locally
+- Tamil-only movie catalog
+- Coimbatore-focused theatre and showtime experience
+- Movie details including genre, duration, certification, format, and description
+- Local fictional poster artwork
+- Rolling demo schedule that remains populated over time
 
-Requires Node.js 16+.
+### 🎟️ Seat Booking
 
-```bash
-npm install
-npm start
-```
+- Live 8×10 seat layout
+- Premium seats in rows A–B
+- Occupied-seat detection
+- Temporary seven-minute server-side seat holds
+- Seat availability rechecked before booking confirmation
+- Booking code generated after confirmation
 
-Open:
+### 💰 Server-Side Pricing
 
-```text
-http://localhost:3000
-```
+The server calculates the complete booking amount before confirmation:
 
-Useful commands:
+- Base ticket amount
+- Premium-seat surcharge
+- Convenience fee
+- GST
+- Final total
 
-```bash
-npm test
-npm run check
-node scripts/reset-demo-data.js
-```
+The browser displays the server-calculated result instead of independently calculating the checkout amount.
 
-`npm install` has no third-party runtime dependencies; the application uses Node's built-in HTTP, filesystem, URL, and crypto modules.
+### ❌ Cancellation
 
-## Project structure
+- Booking lookup by email
+- Cancellation eligibility based on the booking cutoff
+- India Standard Time used for show and cancellation calculations
+- Refund amount displayed for eligible cancellations
 
-```text
-showfair/
-├── public/
-│   ├── index.html
-│   ├── app.js
-│   ├── style.css
-│   └── posters/             # local fictional Tamil-film poster artwork
-├── src/
-│   ├── booking.js            # booking codes + India-time show/cancellation rules
-│   ├── config.js             # runtime + pricing configuration
-│   ├── pricing.js            # seat pricing + fee calculation
-│   ├── seats.js              # seat inventory + hold occupancy
-│   ├── store.js              # JSON datastore + rolling demo dates
-│   └── validation.js         # customer + seat validation
-├── test/                     # Node test suite
-├── scripts/
-├── data/store.json           # fictional Tamil catalog + demo booking state
-├── server.js
-└── README.md
-```
+### 🔐 Application Security
 
-## API
+- Baseline Content Security Policy
+- Permissions-Policy headers
+- Server-side validation
+- Server-side seat availability checks
+- Server-side price calculation
+- Past-show booking prevention
+- No-cache handling for local application assets
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/api/health` | Service health |
-| GET | `/api/catalog?date=YYYY-MM-DD` | Tamil movies and shows for a selected date |
-| GET | `/api/show?id=SHOW_ID` | Show details and live seat map |
-| POST | `/api/hold` | Hold selected seats for 7 minutes |
-| POST | `/api/book` | Confirm a held selection |
-| GET | `/api/bookings?email=EMAIL` | Look up bookings |
-| POST | `/api/cancel` | Cancel an eligible booking |
-| POST | `/api/release` | Release a seat hold |
+### 🧪 Testing
 
-## Rolling demo schedule
+The project uses Node.js's built-in test runner and includes coverage for:
 
-Show records use `dayOffset` instead of a hard-coded calendar date:
+- Pricing and fee rounding
+- Premium-seat pricing
+- Seat occupancy
+- Expired holds
+- Booking identifiers
+- India-time cancellation cutoffs
+- Customer validation
+- Security headers
+- Static file serving
+- Tamil-only catalog behavior
+- Rolling show dates
+- Future-date catalog selection
+- Server integration behavior
 
-- `0` = today in India
-- `1` = tomorrow
-- `2` = two days from today
-- etc.
+---
 
-This keeps the demo populated when it is deployed for a long time.
-
-Only shows that have **not already started** are returned for the selected date.
-
-## Seat booking flow
-
-1. The browser requests a fresh seat map from `/api/show`.
-2. The server checks seeded occupied seats, confirmed bookings, and active holds.
-3. The server creates a seven-minute hold.
-4. The server calculates:
-   - ticket amount
-   - premium-seat surcharge
-   - convenience fee
-   - GST
-   - total
-5. The checkout screen displays that server-calculated object.
-6. `/api/book` re-checks the hold and seat availability before confirming.
-7. The hold is removed when the booking is confirmed.
-
-The current seat inventory is an 8×10 grid. Rows A–B are premium seats.
-
-## Pricing
-
-The demo uses:
+## How It Works
 
 ```text
-Premium seat = base show price + ₹40
-Convenience fee = 6% of ticket amount
-GST = 18% of ticket amount + convenience fee
-Total = ticket amount + convenience fee + GST
-```
+                    SHOWFAIR BOOKING FLOW
 
-Each fee is rounded independently on the server.
-
-## Cancellation
-
-A confirmed booking gets a cancellation cutoff of:
-
-```text
-booking time + 2.5 hours
-```
-
-capped at the show's start time.
-
-The API uses India Standard Time when interpreting show dates/times. If cancellation is still allowed, the booking page exposes the cancellation action and the full demo amount is marked as refunded after cancellation.
-
-## Tests
-
-The project uses Node's built-in test runner:
-
-```bash
-npm test
-npm run check
-```
-
-The suite covers:
-
-- pricing and fee rounding
-- premium seats
-- seat occupancy and expired holds
-- booking identifiers
-- India-time cancellation cutoff
-- customer validation
-- security headers
-- static file serving
-- Tamil-only catalog
-- rolling show dates
-- future-date catalog selection
-
-## Demo limitations
-
-This is still a portfolio/demo application, not a production ticketing platform.
-
-It intentionally uses:
-
-- a JSON file instead of PostgreSQL
-- no customer authentication
-- email-only booking lookup
-- simulated payment
-- a single-process server
-- no payment gateway/webhooks
-
-For a real deployment, use a transactional database, authenticated accounts, idempotent booking requests, rate limiting, real payment processing, and multi-instance-safe seat locking.
-
-## Render deployment
-
-Render can run the same Node server with:
-
-```text
-Build Command: npm install
-Start Command: npm start
-```
-
-The application listens on the `PORT` environment variable supplied by Render.
-
-After pushing changes to the connected GitHub repository, Render should redeploy the new commit automatically if auto-deploy is enabled.
+┌───────────────────────┐
+│   Browse Tamil Movies │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│ Select Date & Showtime│
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│   Request Seat Map    │
+└───────────┬───────────┘
+            │
+            ▼
+┌────────────────────────────────┐
+│ Server checks seat availability│
+│ • Seeded occupied seats        │
+│ • Confirmed bookings           │
+│ • Active holds                 │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────┐
+│   Select Available Seats│
+└────────────┬───────────┘
+             │
+             ▼
+┌────────────────────────────┐
+│ Server creates 7-min hold  │
+│ and calculates pricing     │
+└────────────┬───────────────┘
+             │
+             ▼
+┌────────────────────────────┐
+│ Checkout displays server   │
+│ calculated ticket breakdown│
+└────────────┬───────────────┘
+             │
+             ▼
+┌────────────────────────────┐
+│ /api/book re-checks hold   │
+│ and seat availability      │
+└────────────┬───────────────┘
+             │
+             ▼
+┌───────────────────────┐
+│ Confirm Booking       │
+│ + Generate Booking ID │
+└───────────────────────┘
