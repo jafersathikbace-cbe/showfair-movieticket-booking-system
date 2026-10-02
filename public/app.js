@@ -1040,3 +1040,524 @@
       }
 
     } finally {
+
+      confirmBtn.disabled = false;
+
+      confirmBtn.textContent =
+        'Confirm booking';
+    }
+  }
+
+
+  function renderConfirmation(booking) {
+
+    $('#conf-movie').textContent =
+      booking.movie
+        ? booking.movie.title
+        : 'Tamil movie';
+
+
+    $('#conf-theatre').textContent =
+      booking.theatre
+        ? `${booking.theatre.name}, ${booking.theatre.area}`
+        : '';
+
+
+    $('#conf-date').textContent =
+      booking.show
+        ? booking.show.dateLabel
+        : '';
+
+
+    $('#conf-time').textContent =
+      booking.show
+        ? `${formatTime12(booking.show.time)} · ${booking.show.format}`
+        : '';
+
+
+    $('#conf-seats').textContent =
+      booking.seats.join(', ');
+
+
+    $('#conf-code').textContent =
+      booking.code;
+
+
+    $('#conf-paid').textContent =
+      rupees(booking.amount.total);
+
+
+    $('#conf-cancel').textContent =
+      booking.cancelUntilLabel;
+  }
+
+
+  function showStep(step) {
+
+    stepSeats.hidden =
+      step !== 'seats';
+
+    stepCheckout.hidden =
+      step !== 'checkout';
+
+    stepConfirmation.hidden =
+      step !== 'confirmation';
+
+
+    if (step === 'confirmation') {
+      holdBanner.hidden = true;
+    }
+  }
+
+
+  function closeModal() {
+
+    if (modal.hidden) {
+      return;
+    }
+
+
+    if (
+      state.holdId &&
+      stepConfirmation.hidden
+    ) {
+      releaseHold();
+    }
+
+
+    stopHoldCountdown();
+
+    state.holdId = null;
+
+    modal.hidden = true;
+
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+
+    state.showId = null;
+    state.showContext = null;
+
+
+    /*
+     * Return to the catalogue after closing.
+     */
+    loadCatalog(state.selectedDate);
+  }
+
+
+  async function lookupBookings() {
+
+    const email =
+      lookupEmail.value.trim();
+
+
+    if (!email) {
+
+      bookingsList.innerHTML =
+        '<p class="empty-state">Enter your email above to see your bookings.</p>';
+
+      return;
+    }
+
+
+    bookingsList.innerHTML =
+      '<p class="empty-state">Looking up your bookings…</p>';
+
+
+    try {
+
+      const data =
+        await api(
+          `/api/bookings?email=${encodeURIComponent(email)}`
+        );
+
+      renderBookings(data.bookings);
+
+    } catch (error) {
+
+      bookingsList.innerHTML = `
+        <p class="empty-state">
+          ${escapeHtml(error.message)}
+        </p>
+      `;
+    }
+  }
+
+
+  function renderBookings(bookings) {
+
+    if (!bookings.length) {
+
+      bookingsList.innerHTML = `
+        <div class="empty-panel">
+          <strong>No bookings found.</strong>
+          <span>
+            Check the email address used during checkout.
+          </span>
+        </div>
+      `;
+
+      return;
+    }
+
+
+    bookingsList.innerHTML =
+      bookings.map((booking) => {
+
+        const confirmed =
+          booking.status === 'CONFIRMED';
+
+        const statusClass =
+          confirmed
+            ? 'status-confirmed'
+            : 'status-cancelled';
+
+
+        const footerAction =
+          confirmed
+
+            ? (
+                booking.canCancel
+
+                  ? `
+                    <button
+                      class="btn btn-danger-outline cancel-btn"
+                      data-code="${escapeHtml(booking.code)}"
+                      type="button">
+                      Cancel booking
+                    </button>
+                  `
+
+                  : `
+                    <span class="window-closed-note">
+                      Cancellation window closed
+                    </span>
+                  `
+              )
+
+            : `
+                <span class="refund-note">
+                  Refund initiated:
+                  ${rupees(booking.refund)}
+                </span>
+              `;
+
+
+        return `
+
+          <article class="booking-card">
+
+            <div class="booking-card-main">
+
+              <div class="booking-title-row">
+
+                <h3>
+                  ${escapeHtml(
+                    booking.movie
+                      ? booking.movie.title
+                      : 'Tamil movie'
+                  )}
+                </h3>
+
+                <span
+                  class="booking-status ${statusClass}">
+                  ${confirmed ? 'CONFIRMED' : 'CANCELLED'}
+                </span>
+
+              </div>
+
+
+              <div class="meta-line">
+                ${escapeHtml(
+                  booking.theatre
+                    ? `${booking.theatre.name}, ${booking.theatre.area}`
+                    : ''
+                )}
+              </div>
+
+
+              <div class="meta-line">
+
+                ${escapeHtml(
+                  booking.show
+                    ? booking.show.dateLabel
+                    : ''
+                )}
+
+                ·
+
+                ${escapeHtml(
+                  booking.show
+                    ? formatTime12(booking.show.time)
+                    : ''
+                )}
+
+                ·
+
+                ${escapeHtml(
+                  booking.show
+                    ? booking.show.format
+                    : ''
+                )}
+
+              </div>
+
+
+              <div class="meta-line">
+
+                Seats
+                ${escapeHtml(booking.seats.join(', '))}
+
+                · Paid
+                ${rupees(booking.amount.total)}
+
+              </div>
+
+            </div>
+
+
+            <div class="booking-card-footer">
+
+              <div>
+
+                <span class="booking-code-badge">
+                  ${escapeHtml(booking.code)}
+                </span>
+
+                ${
+                  confirmed
+                    ? `
+                      <span class="cancel-note">
+                        · Cancel until
+                        ${escapeHtml(booking.cancelUntilLabel)}
+                      </span>
+                    `
+                    : ''
+                }
+
+              </div>
+
+              ${footerAction}
+
+            </div>
+
+          </article>
+
+        `;
+
+      }).join('');
+
+
+    $$('.cancel-btn', bookingsList)
+      .forEach((button) => {
+
+        button.addEventListener(
+          'click',
+          () => cancelBooking(button.dataset.code)
+        );
+
+      });
+  }
+
+
+  async function cancelBooking(code) {
+
+    if (
+      !window.confirm(
+        'Cancel this booking? The demo will mark the full amount as refunded.'
+      )
+    ) {
+      return;
+    }
+
+
+    try {
+
+      await api('/api/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          code
+        })
+      });
+
+
+      showToast(
+        'Booking cancelled. Refund initiated.'
+      );
+
+      lookupBookings();
+
+    } catch (error) {
+
+      showToast(error.message);
+    }
+  }
+
+
+  function init() {
+
+    loadCatalog();
+
+
+    $$('.nav-link')
+      .forEach((button) => {
+
+        button.addEventListener(
+          'click',
+          () => {
+
+            showView(button.dataset.nav);
+
+            if (button.dataset.nav === 'home') {
+              closeMovieDetail();
+            }
+          }
+        );
+
+      });
+
+
+    $('.logo')
+      .addEventListener('click', (event) => {
+
+        event.preventDefault();
+
+        showView('home');
+
+        closeMovieDetail();
+      });
+
+
+    $('#browse-cta')
+      .addEventListener('click', () => {
+
+        catalogSection.scrollIntoView({
+          behavior: 'smooth'
+        });
+
+      });
+
+
+    holdBtn.addEventListener(
+      'click',
+      holdSeats
+    );
+
+
+    $('#back-to-seats')
+      .addEventListener(
+        'click',
+        backToSeats
+      );
+
+
+    checkoutForm.addEventListener(
+      'submit',
+      submitCheckout
+    );
+
+
+    /*
+     * Reliable modal close button.
+     */
+    $('#modal-close')
+      .addEventListener(
+        'click',
+        (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          closeModal();
+        }
+      );
+
+
+    /*
+     * Clicking the dark overlay closes the modal.
+     * Clicking inside the white modal does NOT close it.
+     */
+    modal.addEventListener(
+      'click',
+      (event) => {
+
+        if (event.target === modal) {
+          closeModal();
+        }
+
+      }
+    );
+
+
+    /*
+     * Escape key closes the modal.
+     */
+    document.addEventListener(
+      'keydown',
+      (event) => {
+
+        if (
+          event.key === 'Escape' &&
+          !modal.hidden
+        ) {
+          event.preventDefault();
+          closeModal();
+        }
+
+      }
+    );
+
+
+    lookupBtn.addEventListener(
+      'click',
+      lookupBookings
+    );
+
+
+    lookupEmail.addEventListener(
+      'keydown',
+      (event) => {
+
+        if (event.key === 'Enter') {
+          lookupBookings();
+        }
+
+      }
+    );
+
+
+    $('#conf-done')
+      .addEventListener(
+        'click',
+        closeModal
+      );
+
+
+    $('#conf-view-bookings')
+      .addEventListener(
+        'click',
+        () => {
+
+          const email =
+            state.lastBooking &&
+            state.lastBooking.customer
+              ? state.lastBooking.customer.email
+              : '';
+
+
+          closeModal();
+
+          showView('bookings');
+
+          lookupEmail.value = email;
+
+          lookupBookings();
+        }
+      );
+  }
+
+
+  init();
+
+})();
