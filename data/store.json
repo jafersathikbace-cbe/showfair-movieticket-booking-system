@@ -1,0 +1,320 @@
+{
+  "movies": [
+    {
+      "id": "m1",
+      "title": "Vaanam Vaasal",
+      "language": "Tamil",
+      "genre": "Action",
+      "duration": "2h 24m",
+      "rating": "UA 13+",
+      "description": "A determined bus conductor returns to his hometown in Coimbatore and takes on a powerful land syndicate threatening the people he grew up with.",
+      "formats": [
+        "2D",
+        "Dolby Atmos"
+      ],
+      "poster": "/posters/vaanam-vaasal.svg"
+    },
+    {
+      "id": "m2",
+      "title": "Nizhalin Osai",
+      "language": "Tamil",
+      "genre": "Thriller",
+      "duration": "2h 08m",
+      "rating": "UA 16+",
+      "description": "A late-night radio host receives an anonymous recording that connects three missing-person cases across Coimbatore.",
+      "formats": [
+        "2D"
+      ],
+      "poster": "/posters/nizhalin-osai.svg"
+    },
+    {
+      "id": "m3",
+      "title": "Kaatrin Paadhai",
+      "language": "Tamil",
+      "genre": "Romance",
+      "duration": "2h 16m",
+      "rating": "U/A",
+      "description": "Two strangers who meet on a long-distance bus keep crossing paths while each tries to rebuild a life in Coimbatore.",
+      "formats": [
+        "2D"
+      ],
+      "poster": "/posters/kaatrin-paadhai.svg"
+    },
+    {
+      "id": "m4",
+      "title": "Sirippu Express",
+      "language": "Tamil",
+      "genre": "Comedy",
+      "duration": "2h 02m",
+      "rating": "U",
+      "description": "A wedding planner, a runaway groom and one overloaded van turn a simple family trip into a chaotic race across Coimbatore.",
+      "formats": [
+        "2D"
+      ],
+      "poster": "/posters/sirippu-express.svg"
+    },
+    {
+      "id": "m5",
+      "title": "Oru Naal Oru Kanavu",
+      "language": "Tamil",
+      "genre": "Family",
+      "duration": "1h 58m",
+      "rating": "U",
+      "description": "A schoolgirl's science project brings her busy family together and turns an ordinary weekend into an unforgettable adventure.",
+      "formats": [
+        "2D"
+      ],
+      "poster": "/posters/oru-naal-oru-kanavu.svg"
+    },
+    {
+      "id": "m6",
+      "title": "Mann Vaasam",
+      "language": "Tamil",
+      "genre": "Drama",
+      "duration": "2h 12m",
+      "rating": "U/A",
+      "description": "After years away, a young architect returns to her hometown near Coimbatore to restore an old theatre and discovers why her family left it behind.",
+      "formats": [
+        "2D",
+        "Dolby Atmos"
+      ],
+      "poster": "/posters/mann-vaasam.svg"
+    }
+  ],
+  "theatres": [
+    {
+      "id": "t1",
+      "name": "Brookfield Screen House",
+      "area": "RS Puram",
+      "city": "Coimbatore",
+      "screen": "Screen 1",
+      "facilities": [
+        "Dolby Atmos",
+        "Recliner seats",
+        "Parking"
+      ]
+    },
+    {
+      "id": "t2",
+      "name": "Gandhipuram Cinemas",
+      "area": "Gandhipuram",
+      "city": "Coimbatore",
+      "screen": "Screen 4",
+      "facilities": [
+        "Large screen",
+        "Snack counter",
+        "Wheelchair access"
+      ]
+    },
+    {
+      "id": "t3",
+      "name": "Peelamedu Luxe",
+      "area": "Peelamedu",
+      "city": "Coimbatore",
+      "screen": "Screen 2",
+      "facilities": [
+        "Dolby Atmos",
+        "Premium seats",
+        "Online snacks"
+      ]
+    },
+    {
+      "id": "t4",
+      "name": "Saibaba Colony Movie House",
+      "area": "Saibaba Colony",
+      "city": "Coimbatore",
+      "screen": "Screen 3",
+      "facilities": [
+        "Parking",
+        "Family seating",
+        "Snack counter"
+      ]
+    }
+  ],
+  "shows": [
+    {
+      "id": "s1",
+      "movieId": "m1",
+      "theatreId": "t1",
+      "dayOffset": 0,
+      "time": "10:30",
+      "format": "2D",
+      "price": 170
+    },
+    {
+      "id": "s2",
+      "movieId": "m1",
+      "theatreId": "t2",
+      "dayOffset": 0,
+      "time": "18:45",
+      "format": "Dolby Atmos",
+      "price": 220
+    },
+    {
+      "id": "s3",
+      "movieId": "m1",
+      "theatreId": "t3",
+      "dayOffset": 1,
+      "time": "21:15",
+      "format": "2D",
+      "price": 190
+    },
+    {
+      "id": "s4",
+      "movieId": "m2",
+      "theatreId": "t2",
+      "dayOffset": 0,
+      "time": "13:15",
+      "format": "2D",
+      "price": 160
+    },
+    {
+      "id": "s5",
+      "movieId": "m2",
+      "theatreId": "t3",
+      "dayOffset": 1,
+      "time": "19:30",
+      "format": "2D",
+      "price": 180
+    },
+    {
+      "id": "s6",
+      "movieId": "m2",
+      "theatreId": "t4",
+      "dayOffset": 2,
+      "time": "21:45",
+      "format": "2D",
+      "price": 170
+    },
+    {
+      "id": "s7",
+      "movieId": "m3",
+      "theatreId": "t4",
+      "dayOffset": 0,
+      "time": "11:00",
+      "format": "2D",
+      "price": 150
+    },
+    {
+      "id": "s8",
+      "movieId": "m3",
+      "theatreId": "t1",
+      "dayOffset": 1,
+      "time": "16:30",
+      "format": "2D",
+      "price": 170
+    },
+    {
+      "id": "s9",
+      "movieId": "m3",
+      "theatreId": "t2",
+      "dayOffset": 3,
+      "time": "20:00",
+      "format": "2D",
+      "price": 165
+    },
+    {
+      "id": "s10",
+      "movieId": "m4",
+      "theatreId": "t3",
+      "dayOffset": 0,
+      "time": "14:45",
+      "format": "2D",
+      "price": 155
+    },
+    {
+      "id": "s11",
+      "movieId": "m4",
+      "theatreId": "t2",
+      "dayOffset": 2,
+      "time": "18:15",
+      "format": "2D",
+      "price": 160
+    },
+    {
+      "id": "s12",
+      "movieId": "m4",
+      "theatreId": "t4",
+      "dayOffset": 4,
+      "time": "20:30",
+      "format": "2D",
+      "price": 150
+    },
+    {
+      "id": "s13",
+      "movieId": "m5",
+      "theatreId": "t1",
+      "dayOffset": 0,
+      "time": "09:45",
+      "format": "2D",
+      "price": 140
+    },
+    {
+      "id": "s14",
+      "movieId": "m5",
+      "theatreId": "t2",
+      "dayOffset": 1,
+      "time": "15:00",
+      "format": "2D",
+      "price": 150
+    },
+    {
+      "id": "s15",
+      "movieId": "m5",
+      "theatreId": "t4",
+      "dayOffset": 3,
+      "time": "17:30",
+      "format": "2D",
+      "price": 145
+    },
+    {
+      "id": "s16",
+      "movieId": "m6",
+      "theatreId": "t3",
+      "dayOffset": 1,
+      "time": "12:00",
+      "format": "2D",
+      "price": 175
+    },
+    {
+      "id": "s17",
+      "movieId": "m6",
+      "theatreId": "t1",
+      "dayOffset": 2,
+      "time": "17:00",
+      "format": "Dolby Atmos",
+      "price": 210
+    },
+    {
+      "id": "s18",
+      "movieId": "m6",
+      "theatreId": "t3",
+      "dayOffset": 4,
+      "time": "19:00",
+      "format": "2D",
+      "price": 180
+    }
+  ],
+  "seatSeeds": {
+    "s1": ["A2", "A3", "B6", "C4", "F8"],
+    "s2": ["A1", "B2", "D5", "D6", "G9"],
+    "s3": ["A4", "B4", "C7", "F2"],
+    "s4": ["B1", "B2", "E5", "E6", "H8"],
+    "s5": ["A7", "C3", "C4", "G6", "H6"],
+    "s6": ["A5", "B5", "D8", "E2"],
+    "s7": ["A1", "A2", "F5", "F6"],
+    "s8": ["B8", "C1", "D1", "G4"],
+    "s9": ["A9", "B9", "E7", "H3"],
+    "s10": ["C6", "C7", "F1", "G10"],
+    "s11": ["A6", "B6", "D3", "D4", "H9"],
+    "s12": ["C8", "C9", "E4"],
+    "s13": ["A3", "A4", "G7"],
+    "s14": ["B3", "B4", "F8", "F9"],
+    "s15": ["A8", "C2", "E6", "H5"],
+    "s16": ["A10", "B10", "D7", "G2"],
+    "s17": ["A5", "B6", "C5", "C6", "H8"],
+    "s18": ["D2", "D3", "F7", "G7"]
+  },
+  "holds": [],
+  "bookings": []
+}
