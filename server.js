@@ -337,3 +337,173 @@ async function handleBook(req, res) {
   saveStore(store);
 
   sendJson(res, 201, serializeBooking(store, booking));
+}
+
+async function handleRelease(req, res) {
+  let body;
+  try {
+    body = await readBody(req);
+  } catch (err) {
+    return sendJson(res, 400, { error: 'That request could not be read.' });
+  }
+  const { holdId } = body;
+  const store = loadStore();
+  store.holds = store.holds.filter((h) => h.id !== holdId);
+  saveStore(store);
+  sendJson(res, 200, { released: true });
+}
+
+function handleBookings(req, res, query) {
+  const store = loadStore();
+  cleanupExpiredHolds(store);
+
+  const email = query.get('email');
+  let bookings = store.bookings;
+  if (email) {
+    const target = email.trim().toLowerCase();
+    bookings = bookings.filter((b) => b.customer.email.toLowerCase() === target);
+  }
+  bookings = bookings.slice().sort((a, b) => b.createdAt - a.createdAt);
+
+  sendJson(res, 200, { bookings: bookings.map((b) => serializeBooking(store, b)) });
+}
+
+async function handleCancel(req, res) {
+  let body;
+  try {
+    body = await readBody(req);
+  } catch (err) {
+    return sendJson(res, 400, { error: 'That request could not be read. Please try again.' });
+  }
+
+  const { code } = body;
+  if (!code) {
+    return sendJson(res, 400, { error: 'A booking code is required to cancel.' });
+  }
+
+  const store = loadStore();
+  const booking = store.bookings.find((b) => b.code === String(code).toUpperCase());
+  if (!booking) {
+    return sendJson(res, 404, { error: 'We could not find a booking with that code.' });
+  }
+  if (booking.status !== 'CONFIRMED') {
+    return sendJson(res, 409, { error: 'This booking has already been cancelled.' });
+  }
+  if (Date.now() >= booking.cancelUntil) {
+    return sendJson(res, 409, { error: 'Cancellation window has closed for this booking.' });
+  }
+
+  booking.status = 'CANCELLED';
+  booking.refund = booking.amount.total;
+  saveStore(store);
+
+  sendJson(res, 200, serializeBooking(store, booking));
+}
+
+// ---------------------------------------------------------------------------
+// Static file serving
+// ---------------------------------------------------------------------------
+
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
+};
+
+function serveStatic(req, res, pathname) {
+  let relativePath = pathname === '/' ? '/index.html' : pathname;
+  const filePath = path.normalize(path.join(PUBLIC_DIR, relativePath));
+
+  // Prevent path traversal outside the public directory.
+  if (!filePath.startsWith(PUBLIC_DIR)) {
+    res.writeHead(403);
+    return res.end('Forbidden');
+  }
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      return res.end('Not found');
+    }
+    const ext = path.extname(filePath);
+    applySecurityHeaders(res);
+    res.writeHead(200, {
+      'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+    });
+    res.end(data);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Server
+// ---------------------------------------------------------------------------
+
+const server = http.createServer(async (req, res) => {
+  try {
+    const parsed = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const { pathname, searchParams } = parsed;
+
+    if (pathname === '/api/health' && req.method === 'GET') {
+      return sendJson(res, 200, { status: 'ok', service: 'showfair' });
+    }
+    if (pathname === '/api/catalog' && req.method === 'GET') {
+      return handleCatalog(req, res, searchParams);
+    }
+    if (pathname === '/api/show' && req.method === 'GET') {
+      return handleShowDetail(req, res, searchParams);
+    }
+    if (pathname === '/api/hold' && req.method === 'POST') {
+      return await handleHold(req, res);
+    }
+    if (pathname === '/api/book' && req.method === 'POST') {
+      return await handleBook(req, res);
+    }
+    if (pathname === '/api/bookings' && req.method === 'GET') {
+      return handleBookings(req, res, searchParams);
+    }
+    if (pathname === '/api/cancel' && req.method === 'POST') {
+      return await handleCancel(req, res);
+    }
+    if (pathname === '/api/release' && req.method === 'POST') {
+      return await handleRelease(req, res);
+    }
+    if (pathname.startsWith('/api/')) {
+      return sendJson(res, 404, { error: 'Unknown API endpoint.' });
+    }
+
+    if (!['GET', 'HEAD'].includes(req.method)) {
+      res.setHeader('Allow', 'GET, HEAD');
+      return sendJson(res, 405, { error: 'Method not allowed.' });
+    }
+
+    return serveStatic(req, res, pathname);
+  } catch (err) {
+    // Never leak stack traces to the client.
+    console.error(err);
+    sendJson(res, 500, { error: 'Something went wrong on our end. Please try again.' });
+  }
+});
+
+function start() {
+  server.listen(PORT, () => {
+    console.log(`ShowFair running at http://localhost:${PORT}`);
+  });
+}
+
+function shutdown(signal) {
+  console.log(`${signal} received; shutting down ShowFair.`);
+  server.close(() => process.exit(0));
+}
+
+if (require.main === module) {
+  start();
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+}
+
+module.exports = { server, start };
