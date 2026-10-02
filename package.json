@@ -1,0 +1,17 @@
+{
+  "name": "showfair",
+  "version": "1.1.0",
+  "description": "ShowFair — Tamil movie showtimes and seat booking in Chennai with transparent pricing and reliable seat holds.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "check": "node --check server.js && node --check src/*.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "license": "MIT",
+  "private": true,
+  "dependencies": {}
+}
