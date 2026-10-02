@@ -47,3 +47,52 @@ http://localhost:3000
 Useful commands:
 
 ```bash
+npm test
+npm run check
+node scripts/reset-demo-data.js
+```
+
+`npm install` has no third-party runtime dependencies; the application uses Node's built-in HTTP, filesystem, URL, and crypto modules.
+
+## Project structure
+
+```text
+showfair/
+├── public/
+│   ├── index.html
+│   ├── app.js
+│   ├── style.css
+│   └── posters/             # local fictional Tamil-film poster artwork
+├── src/
+│   ├── booking.js            # booking codes + India-time show/cancellation rules
+│   ├── config.js             # runtime + pricing configuration
+│   ├── pricing.js            # seat pricing + fee calculation
+│   ├── seats.js              # seat inventory + hold occupancy
+│   ├── store.js              # JSON datastore + rolling demo dates
+│   └── validation.js         # customer + seat validation
+├── test/                     # Node test suite
+├── scripts/
+├── data/store.json           # fictional Tamil catalog + demo booking state
+├── server.js
+└── README.md
+```
+
+## API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/health` | Service health |
+| GET | `/api/catalog?date=YYYY-MM-DD` | Tamil movies and shows for a selected date |
+| GET | `/api/show?id=SHOW_ID` | Show details and live seat map |
+| POST | `/api/hold` | Hold selected seats for 7 minutes |
+| POST | `/api/book` | Confirm a held selection |
+| GET | `/api/bookings?email=EMAIL` | Look up bookings |
+| POST | `/api/cancel` | Cancel an eligible booking |
+| POST | `/api/release` | Release a seat hold |
+
+## Rolling demo schedule
+
+Show records use `dayOffset` instead of a hard-coded calendar date:
+
+- `0` = today in India
+- `1` = tomorrow
