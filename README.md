@@ -146,3 +146,52 @@ capped at the show's start time.
 The API uses India Standard Time when interpreting show dates/times. If cancellation is still allowed, the booking page exposes the cancellation action and the full demo amount is marked as refunded after cancellation.
 
 ## Tests
+
+The project uses Node's built-in test runner:
+
+```bash
+npm test
+npm run check
+```
+
+The suite covers:
+
+- pricing and fee rounding
+- premium seats
+- seat occupancy and expired holds
+- booking identifiers
+- India-time cancellation cutoff
+- customer validation
+- security headers
+- static file serving
+- Tamil-only catalog
+- rolling show dates
+- future-date catalog selection
+
+## Demo limitations
+
+This is still a portfolio/demo application, not a production ticketing platform.
+
+It intentionally uses:
+
+- a JSON file instead of PostgreSQL
+- no customer authentication
+- email-only booking lookup
+- simulated payment
+- a single-process server
+- no payment gateway/webhooks
+
+For a real deployment, use a transactional database, authenticated accounts, idempotent booking requests, rate limiting, real payment processing, and multi-instance-safe seat locking.
+
+## Render deployment
+
+Render can run the same Node server with:
+
+```text
+Build Command: npm install
+Start Command: npm start
+```
+
+The application listens on the `PORT` environment variable supplied by Render.
+
+After pushing changes to the connected GitHub repository, Render should redeploy the new commit automatically if auto-deploy is enabled.
