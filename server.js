@@ -168,3 +168,172 @@ function handleCatalog(req, res, query) {
 
     return { ...movie, shows };
   });
+
+  sendJson(res, 200, { movies, theatres: store.theatres, selectedDate, availableDates });
+}
+
+function handleShowDetail(req, res, query) {
+  const showId = query.get('id');
+  const store = loadStore();
+  cleanupExpiredHolds(store);
+
+  const ctx = getShowContext(store, showId);
+  if (!ctx) {
+    return sendJson(res, 404, { error: 'That showtime could not be found.' });
+  }
+
+  const startsAt = showStartTimestamp(ctx.show);
+  if (startsAt <= Date.now()) {
+    return sendJson(res, 410, { error: 'This show has already started. Please choose another show.' });
+  }
+
+  sendJson(res, 200, {
+    show: ctx.show,
+    movie: ctx.movie,
+    theatre: ctx.theatre,
+    seatMap: buildSeatMap(store, showId, getShowContext),
+    maxSeats: MAX_SEATS_PER_BOOKING,
+    holdDurationSeconds: HOLD_DURATION_MS / 1000,
+  });
+}
+
+async function handleHold(req, res) {
+  let body;
+  try {
+    body = await readBody(req);
+  } catch (err) {
+    return sendJson(res, 400, { error: 'That request could not be read. Please try again.' });
+  }
+
+  const { showId, seats } = body;
+  if (!showId || !Array.isArray(seats) || seats.length === 0) {
+    return sendJson(res, 400, { error: 'Choose at least one seat before continuing.' });
+  }
+  if (seats.length > MAX_SEATS_PER_BOOKING) {
+    return sendJson(res, 400, { error: `You can book up to ${MAX_SEATS_PER_BOOKING} seats at a time.` });
+  }
+  const uniqueSeats = Array.from(new Set(seats));
+  if (uniqueSeats.some((s) => !isValidSeatId(s))) {
+    return sendJson(res, 400, { error: 'One of the selected seats is not valid. Refresh and choose again.' });
+  }
+
+  const store = loadStore();
+  cleanupExpiredHolds(store);
+
+  const ctx = getShowContext(store, showId);
+  if (!ctx) {
+    return sendJson(res, 404, { error: 'That showtime could not be found.' });
+  }
+  if (showStartTimestamp(ctx.show) <= Date.now()) {
+    return sendJson(res, 410, { error: 'This show has already started. Please choose another show.' });
+  }
+
+  const occupied = occupiedSeatsForShow(store, showId, null);
+  const unavailable = uniqueSeats.filter((s) => occupied.has(s));
+  if (unavailable.length > 0) {
+    return sendJson(res, 409, {
+      error: 'One or more seats are no longer available. Refresh and choose again.',
+      seats: unavailable,
+    });
+  }
+
+  const ticketAmount = uniqueSeats.reduce(
+    (sum, seatId) => sum + seatPrice(ctx.show.price, seatRow(seatId)), 0
+  );
+  const amount = priceBreakdown(ticketAmount);
+
+  const hold = {
+    id: createId('hold'),
+    showId,
+    seats: uniqueSeats,
+    expiresAt: Date.now() + HOLD_DURATION_MS,
+  };
+  store.holds.push(hold);
+  saveStore(store);
+
+  sendJson(res, 200, { holdId: hold.id, expiresAt: hold.expiresAt, seats: hold.seats, amount });
+}
+
+async function handleBook(req, res) {
+  let body;
+  try {
+    body = await readBody(req);
+  } catch (err) {
+    return sendJson(res, 400, { error: 'That request could not be read. Please try again.' });
+  }
+
+  const { holdId, customer } = body;
+  if (!holdId || !customer) {
+    return sendJson(res, 400, { error: 'Booking details are incomplete.' });
+  }
+  const { name, email, phone } = normalizeCustomer(customer);
+
+  if (name.length < 2) {
+    return sendJson(res, 400, { error: 'Please enter your full name.' });
+  }
+  if (!isValidEmail(email)) {
+    return sendJson(res, 400, { error: 'Please enter a valid email address.' });
+  }
+  if (!isValidPhone(phone)) {
+    return sendJson(res, 400, { error: 'Please enter a valid 10-digit mobile number.' });
+  }
+
+  const store = loadStore();
+  const holdExpiredBeforeCleanup = (() => {
+    const h = store.holds.find((x) => x.id === holdId);
+    return h ? h.expiresAt <= Date.now() : null;
+  })();
+  cleanupExpiredHolds(store);
+
+  const hold = store.holds.find((h) => h.id === holdId);
+  if (!hold) {
+    const message = holdExpiredBeforeCleanup === true
+      ? 'Your seat hold has expired. Please select your seats again.'
+      : 'Your seat hold could not be found. Please select your seats again.';
+    return sendJson(res, 410, { error: message });
+  }
+
+  // Re-validate against confirmed bookings in case anything changed.
+  const ctx = getShowContext(store, hold.showId);
+  if (!ctx) {
+    return sendJson(res, 404, { error: 'That showtime could not be found.' });
+  }
+  if (showStartTimestamp(ctx.show) <= Date.now()) {
+    store.holds = store.holds.filter((h) => h.id !== hold.id);
+    saveStore(store);
+    return sendJson(res, 410, { error: 'This show has already started. Please choose another show.' });
+  }
+  const occupied = occupiedSeatsForShow(store, hold.showId, hold.id);
+  const nowUnavailable = hold.seats.filter((s) => occupied.has(s));
+  if (nowUnavailable.length > 0) {
+    store.holds = store.holds.filter((h) => h.id !== hold.id);
+    saveStore(store);
+    return sendJson(res, 409, {
+      error: 'One or more seats are no longer available. Refresh and choose again.',
+      seats: nowUnavailable,
+    });
+  }
+
+  const ticketAmount = hold.seats.reduce((sum, seatId) => sum + seatPrice(ctx.show.price, seatRow(seatId)), 0);
+  const amount = priceBreakdown(ticketAmount);
+  const createdAt = Date.now();
+  const cancelUntil = computeCancelUntil(createdAt, ctx.show, CANCEL_WINDOW_MS);
+
+  const booking = {
+    id: createId('bk'),
+    code: generateBookingCode(),
+    showId: hold.showId,
+    seats: hold.seats,
+    customer: { name, email, phone },
+    amount,
+    status: 'CONFIRMED',
+    createdAt,
+    cancelUntil,
+    refund: null,
+  };
+
+  store.bookings.push(booking);
+  store.holds = store.holds.filter((h) => h.id !== hold.id);
+  saveStore(store);
+
+  sendJson(res, 201, serializeBooking(store, booking));
