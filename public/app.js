@@ -519,3 +519,524 @@
 
 
       <h3 class="showtimes-heading">
+        Choose a theatre & showtime
+      </h3>
+
+      ${groupsHtml}
+    `;
+
+
+    catalogSection.hidden = true;
+    movieDetail.hidden = false;
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+
+
+    $('#detail-back', movieDetail)
+      .addEventListener('click', closeMovieDetail);
+
+
+    $$('.showtime-chip', movieDetail)
+      .forEach((chip) => {
+
+        chip.addEventListener('click', () => {
+          openBookingModal(chip.dataset.showId);
+        });
+
+      });
+  }
+
+
+  function closeMovieDetail() {
+    movieDetail.hidden = true;
+    catalogSection.hidden = false;
+  }
+
+
+  async function openBookingModal(showId) {
+
+    resetModalState();
+
+    state.showId = showId;
+
+    modal.hidden = false;
+
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+
+    modalTitle.textContent = 'Select your seats';
+
+    modalSubtitle.textContent =
+      'Loading show details…';
+
+    seatMapEl.innerHTML =
+      '<p class="empty-state">Loading seat map…</p>';
+
+    showStep('seats');
+
+
+    try {
+
+      const data =
+        await api(
+          `/api/show?id=${encodeURIComponent(showId)}`
+        );
+
+
+      state.showContext = {
+        show: data.show,
+        movie: data.movie,
+        theatre: data.theatre
+      };
+
+      state.seatMap = data.seatMap;
+      state.maxSeats = data.maxSeats;
+
+
+      modalSubtitle.textContent =
+        `${data.movie.title} · ` +
+        `${data.theatre.name}, ${data.theatre.area} · ` +
+        `${formatDateLong(data.show.date)} · ` +
+        `${formatTime12(data.show.time)}`;
+
+
+      renderSeatMap();
+      updateSeatSummary();
+
+    } catch (error) {
+
+      seatMapEl.innerHTML = `
+        <p class="empty-state">
+          ${escapeHtml(error.message)}
+        </p>
+      `;
+
+      showToast(error.message);
+    }
+  }
+
+
+  function resetModalState() {
+
+    stopHoldCountdown();
+
+    state.selectedSeats = new Set();
+    state.holdId = null;
+    state.holdExpiresAt = null;
+    state.holdAmount = null;
+
+    holdBanner.hidden = true;
+
+    seatErrorEl.hidden = true;
+    checkoutError.hidden = true;
+
+    checkoutForm.reset();
+
+    holdBtn.disabled = true;
+    holdBtn.textContent = 'Hold seats';
+  }
+
+
+  function renderSeatMap() {
+
+    seatMapEl.innerHTML =
+      state.seatMap.map((rowData) => `
+
+        <div class="seat-row">
+
+          <span class="row-label">
+            ${escapeHtml(rowData.row)}
+          </span>
+
+          ${rowData.seats.map((seat) => `
+
+            <button
+              class="seat ${seat.tier === 'premium' ? 'is-premium' : ''}"
+              data-seat-id="${escapeHtml(seat.id)}"
+              data-price="${Number(seat.price)}"
+              ${seat.status === 'occupied' ? 'disabled' : ''}
+              aria-label="Seat ${escapeHtml(seat.id)}, ${escapeHtml(seat.status)}, ${rupees(seat.price)}"
+              type="button">
+
+              ${escapeHtml(seat.number)}
+
+            </button>
+
+          `).join('')}
+
+        </div>
+
+      `).join('');
+
+
+    $$('.seat', seatMapEl)
+      .forEach((button) => {
+
+        if (button.disabled) {
+
+          button.classList.add('is-occupied');
+
+        } else {
+
+          button.addEventListener(
+            'click',
+            () => toggleSeat(button)
+          );
+        }
+
+      });
+  }
+
+
+  function toggleSeat(button) {
+
+    const seatId = button.dataset.seatId;
+
+
+    if (state.selectedSeats.has(seatId)) {
+
+      state.selectedSeats.delete(seatId);
+
+      button.classList.remove('is-selected');
+
+    } else {
+
+      if (state.selectedSeats.size >= state.maxSeats) {
+
+        seatErrorEl.textContent =
+          `You can select up to ${state.maxSeats} seats.`;
+
+        seatErrorEl.hidden = false;
+
+        return;
+      }
+
+      state.selectedSeats.add(seatId);
+
+      button.classList.add('is-selected');
+    }
+
+
+    seatErrorEl.hidden = true;
+
+    updateSeatSummary();
+  }
+
+
+  function previewTicketAmount() {
+
+    return Array.from(state.selectedSeats)
+      .reduce((total, id) => {
+
+        const button =
+          $(`.seat[data-seat-id="${CSS.escape(id)}"]`, seatMapEl);
+
+        return total +
+          (button ? Number(button.dataset.price) : 0);
+
+      }, 0);
+  }
+
+
+  function updateSeatSummary() {
+
+    const count = state.selectedSeats.size;
+
+    selectedCountEl.textContent =
+      count === 1
+        ? '1 seat selected'
+        : `${count} seats selected`;
+
+
+    selectedAmountEl.textContent =
+      count
+        ? `Ticket subtotal ${rupees(previewTicketAmount())}`
+        : '';
+
+
+    holdBtn.disabled = count === 0;
+  }
+
+
+  async function holdSeats() {
+
+    if (!state.selectedSeats.size) {
+      return;
+    }
+
+    holdBtn.disabled = true;
+    holdBtn.textContent = 'Holding…';
+
+
+    try {
+
+      const data =
+        await api('/api/hold', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            showId: state.showId,
+            seats: Array.from(state.selectedSeats)
+          })
+        });
+
+
+      state.holdId = data.holdId;
+      state.holdExpiresAt = data.expiresAt;
+      state.holdAmount = data.amount;
+
+
+      startHoldCountdown();
+
+      renderCheckoutBreakdown();
+
+      goToCheckout();
+
+
+    } catch (error) {
+
+      seatErrorEl.textContent = error.message;
+      seatErrorEl.hidden = false;
+
+
+      if (error.status === 409) {
+
+        try {
+
+          const fresh =
+            await api(
+              `/api/show?id=${encodeURIComponent(state.showId)}`
+            );
+
+          state.seatMap = fresh.seatMap;
+          state.selectedSeats = new Set();
+
+          renderSeatMap();
+          updateSeatSummary();
+
+        } catch (_) {}
+
+      }
+
+    } finally {
+
+      holdBtn.disabled =
+        state.selectedSeats.size === 0;
+
+      holdBtn.textContent = 'Hold seats';
+    }
+  }
+
+
+  function startHoldCountdown() {
+
+    stopHoldCountdown();
+
+    holdBanner.hidden = false;
+
+
+    const tick = () => {
+
+      const remaining =
+        state.holdExpiresAt - Date.now();
+
+
+      if (remaining <= 0) {
+
+        stopHoldCountdown();
+
+        holdTimerEl.textContent = '0:00';
+
+        onHoldExpired();
+
+        return;
+      }
+
+
+      const seconds =
+        Math.ceil(remaining / 1000);
+
+
+      holdTimerEl.textContent =
+        `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    };
+
+
+    tick();
+
+    state.holdTimerHandle =
+      setInterval(tick, 1000);
+  }
+
+
+  function stopHoldCountdown() {
+
+    if (state.holdTimerHandle) {
+      clearInterval(state.holdTimerHandle);
+    }
+
+    state.holdTimerHandle = null;
+  }
+
+
+  function onHoldExpired() {
+
+    holdBanner.hidden = true;
+
+    state.holdId = null;
+    state.holdAmount = null;
+    state.selectedSeats = new Set();
+
+    showToast(
+      'Your seat hold expired. Please choose seats again.'
+    );
+
+    closeModal();
+  }
+
+
+  function goToCheckout() {
+
+    modalTitle.textContent = 'Checkout';
+
+    showStep('checkout');
+  }
+
+
+  function renderCheckoutBreakdown() {
+
+    const amount = state.holdAmount;
+
+    if (!amount) {
+      return;
+    }
+
+
+    checkoutBreakdown.innerHTML = `
+
+      <div class="pb-row">
+        <span>Tickets (${state.selectedSeats.size})</span>
+        <span>${rupees(amount.ticketAmount)}</span>
+      </div>
+
+      <div class="pb-row">
+        <span>Convenience fee</span>
+        <span>${rupees(amount.convenienceFee)}</span>
+      </div>
+
+      <div class="pb-row">
+        <span>GST</span>
+        <span>${rupees(amount.gst)}</span>
+      </div>
+
+      <div class="pb-total">
+        <span>Total</span>
+        <span>${rupees(amount.total)}</span>
+      </div>
+
+    `;
+  }
+
+
+  function releaseHold() {
+
+    if (!state.holdId) {
+      return;
+    }
+
+    const holdId = state.holdId;
+
+    state.holdId = null;
+
+    api('/api/release', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        holdId
+      })
+    }).catch(() => {});
+  }
+
+
+  function backToSeats() {
+
+    stopHoldCountdown();
+
+    releaseHold();
+
+    state.holdAmount = null;
+
+    openBookingModal(state.showId);
+  }
+
+
+  async function submitCheckout(event) {
+
+    event.preventDefault();
+
+    checkoutError.hidden = true;
+
+    const confirmBtn = $('#confirm-btn');
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Confirming…';
+
+
+    const customer = {
+      name: $('#cust-name').value.trim(),
+      email: $('#cust-email').value.trim(),
+      phone: $('#cust-phone').value.trim()
+    };
+
+
+    try {
+
+      const booking =
+        await api('/api/book', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            holdId: state.holdId,
+            customer
+          })
+        });
+
+
+      stopHoldCountdown();
+
+      holdBanner.hidden = true;
+
+      state.holdId = null;
+
+      state.lastBooking = booking;
+
+      renderConfirmation(booking);
+
+      showStep('confirmation');
+
+
+    } catch (error) {
+
+      checkoutError.textContent =
+        error.message;
+
+      checkoutError.hidden = false;
+
+
+      if (error.status === 410) {
+
+        showToast(
+          'Your hold expired. Please choose the seats again.'
+        );
+      }
+
+    } finally {
