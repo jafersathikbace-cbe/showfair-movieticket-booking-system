@@ -286,3 +286,291 @@ a { color: inherit; }
   color: var(--text-muted);
   font-size: 0.95rem;
   padding: 24px 0;
+}
+
+.movie-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+  text-align: left;
+  padding: 0;
+}
+.movie-card:hover { box-shadow: var(--shadow-md); border-color: #d7d1c4; }
+
+.movie-poster {
+  width: 100%;
+  aspect-ratio: 2 / 2.85;
+  object-fit: cover;
+  background: var(--bg-alt);
+  display: block;
+}
+
+.movie-card-body {
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.movie-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.movie-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.movie-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--bg-alt);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.tag-rating { color: var(--accent-dark); border-color: var(--accent-soft); background: var(--accent-soft); }
+
+/* ---------------- Movie detail / theatre picker ---------------- */
+
+.movie-detail {
+  max-width: 1120px;
+  margin: 0 auto 56px;
+  padding: 0 24px;
+}
+
+.movie-detail-back {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 8px 0;
+  margin-bottom: 12px;
+}
+.movie-detail-back:hover { color: var(--accent); }
+
+.movie-detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.movie-detail-card img {
+  width: 100%;
+  border-radius: var(--radius-md);
+  aspect-ratio: 2 / 2.85;
+  object-fit: cover;
+}
+
+.movie-detail-info h2 { font-size: 1.4rem; margin-bottom: 6px; }
+.movie-detail-info .movie-meta { margin-bottom: 10px; }
+.movie-detail-info p.description {
+  color: var(--text);
+  font-size: 0.94rem;
+  max-width: 60ch;
+}
+
+.theatre-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+
+.theatre-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.theatre-group-header h3 { font-size: 1.02rem; }
+.theatre-group-header span { font-size: 0.82rem; color: var(--text-muted); }
+
+.theatre-facilities {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.showtime-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.showtime-chip {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 84px;
+}
+.showtime-chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+.showtime-chip .fmt { color: var(--text-muted); font-weight: 500; font-size: 0.74rem; }
+.showtime-chip .price { color: var(--accent-dark); font-weight: 700; font-size: 0.78rem; }
+
+/* ---------------- Modal ---------------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 30, 28, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 16px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  max-width: 640px;
+  width: 100%;
+  padding: 28px 28px 24px;
+  position: relative;
+  box-shadow: var(--shadow-md);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+.modal-close:hover { color: var(--text); background: var(--bg-alt); }
+
+.modal-header { margin-bottom: 16px; padding-right: 32px; }
+.modal-header h2 { font-size: 1.25rem; }
+.modal-subtitle { color: var(--text-muted); font-size: 0.88rem; margin-top: 4px; }
+
+.hold-banner {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.screen-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.screen-indicator {
+  width: 80%;
+  max-width: 360px;
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--border);
+  border-radius: 50%/6px;
+}
+
+.seat-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.seat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row-label {
+  width: 16px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.seat {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+.seat:hover:not(:disabled) { border-color: var(--accent); }
+.seat.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.seat.is-occupied {
+  background: var(--bg-alt);
+  color: #cfcac0;
+  border-color: var(--border);
+  cursor: not-allowed;
+}
+.seat.is-premium:not(.is-selected):not(.is-occupied) {
+  border-color: #d9a441;
+  background: #fdf6e8;
+}
+
+.seat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
