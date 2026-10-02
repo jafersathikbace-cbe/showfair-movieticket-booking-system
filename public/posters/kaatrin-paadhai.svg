@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#24132d"/><stop offset="1" stop-color="#a24f76"/></linearGradient></defs>
+<rect width="400" height="560" fill="url(#g)"/>
+<circle cx="310" cy="115" r="105" fill="rgba(255,255,255,.10)"/>
+<circle cx="75" cy="455" r="170" fill="rgba(0,0,0,.20)"/>
+<path d="M0 390 Q100 300 200 390 T400 360 V560 H0Z" fill="rgba(0,0,0,.22)"/>
+<text x="28" y="55" fill="#fff" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="4">SHOWFAIR</text>
+<text x="28" y="92" fill="#f4d8b8" font-family="Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="3">ROMANCE</text>
+<text x="28" y="420" fill="#fff" font-family="Arial,sans-serif" font-size="34" font-weight="800">Kaatrin Paadhai</text>
+<text x="28" y="455" fill="#f4d8b8" font-family="Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="2">CHENNAI • 2D</text>
+<text x="28" y="505" fill="rgba(255,255,255,.78)" font-family="Arial,sans-serif" font-size="12">FICTIONAL DEMO • TAMIL CINEMA</text>
+</svg>
