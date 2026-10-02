@@ -10,3 +10,15 @@ function generateBookingCode() {
 }
 
 function showStartTimestamp(show) {
+  return new Date(`${show.date}T${show.time}:00${INDIA_OFFSET}`).getTime();
+}
+
+function computeCancelUntil(createdAt, show, cancellationWindowMs) {
+  return Math.min(createdAt + cancellationWindowMs, showStartTimestamp(show));
+}
+
+function createId(prefix) {
+  return `${prefix}_${crypto.randomBytes(6).toString('hex')}`;
+}
+
+module.exports = { generateBookingCode, computeCancelUntil, showStartTimestamp, createId };
