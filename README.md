@@ -96,3 +96,53 @@ Show records use `dayOffset` instead of a hard-coded calendar date:
 
 - `0` = today in India
 - `1` = tomorrow
+- `2` = two days from today
+- etc.
+
+This keeps the demo populated when it is deployed for a long time.
+
+Only shows that have **not already started** are returned for the selected date.
+
+## Seat booking flow
+
+1. The browser requests a fresh seat map from `/api/show`.
+2. The server checks seeded occupied seats, confirmed bookings, and active holds.
+3. The server creates a seven-minute hold.
+4. The server calculates:
+   - ticket amount
+   - premium-seat surcharge
+   - convenience fee
+   - GST
+   - total
+5. The checkout screen displays that server-calculated object.
+6. `/api/book` re-checks the hold and seat availability before confirming.
+7. The hold is removed when the booking is confirmed.
+
+The current seat inventory is an 8×10 grid. Rows A–B are premium seats.
+
+## Pricing
+
+The demo uses:
+
+```text
+Premium seat = base show price + ₹40
+Convenience fee = 6% of ticket amount
+GST = 18% of ticket amount + convenience fee
+Total = ticket amount + convenience fee + GST
+```
+
+Each fee is rounded independently on the server.
+
+## Cancellation
+
+A confirmed booking gets a cancellation cutoff of:
+
+```text
+booking time + 2.5 hours
+```
+
+capped at the show's start time.
+
+The API uses India Standard Time when interpreting show dates/times. If cancellation is still allowed, the booking page exposes the cancellation action and the full demo amount is marked as refunded after cancellation.
+
+## Tests
